@@ -13,6 +13,8 @@ void test_init(void);
 
 void test_push_back(void);
 
+void test_hash(void);
+
 void run_test(void);
 
 #ifdef __cplusplus

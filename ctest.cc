@@ -8,6 +8,7 @@
 #include <CUnit.h>
 #include <Basic.h>
 
+#include "c_hash.h"
 #include "ctest.h"
 #include "c_list.h"
 
@@ -57,6 +58,29 @@ void test_init(void)
     free(list);
 }
 
+void test_hash(void)
+{
+    c_map  map;
+
+    map.create = create;
+    map.get = get;
+    map.set = set;
+    map.size = getsize;
+
+    CU_ASSERT(map.create() != NULL);
+
+    map.set("1",1);
+    map.set("2",2);
+    map.set("3",3);
+
+    CU_ASSERT( map.size() == 3);
+
+    CU_ASSERT(map.get("1") == 1);
+    CU_ASSERT(map.get("2") == 2);
+    CU_ASSERT(map.get("3") == 3);
+
+}
+
 void test_push_back(void)
 {
     c_list *list = list_init();
@@ -84,17 +108,21 @@ void run_test(void)
 
     CU_BasicRunMode mode = CU_BRM_VERBOSE;
     CU_ErrorAction  erract = CUEA_IGNORE;
+    CU_ErrorCode    err;
 
 
     CU_TestInfo tests[] =
     {
         {"test_init",test_init},
-        {"test_push_back",test_push_back}
+        {"test_push_back",test_push_back},
+        {"test_hash",test_hash},
+        CU_TEST_INFO_NULL
     };
 
     CU_SuiteInfo suits[] =
     {
-        {"suit_1",NULL,NULL,NULL,NULL,tests}
+        {"suit_1",NULL,NULL,NULL,NULL,tests},
+        CU_SUITE_INFO_NULL
     };
 
     if ( CUE_SUCCESS != CU_initialize_registry())
@@ -102,7 +130,9 @@ void run_test(void)
         fprintf(stderr,"Test Error\n");
         return;
     }
-    if( CUE_SUCCESS != CU_register_suites(suits))
+
+    err = CU_register_suites(suits);
+    if( CUE_SUCCESS != err)
     {
         fprintf(stderr,"Test ERROR\n");
         return;
@@ -115,3 +145,5 @@ void run_test(void)
 
     fprintf(stderr,"Test Complete: Return: %d\n",ret);
 }
+
+
