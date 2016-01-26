@@ -12,7 +12,8 @@
 
 int main(void)
 {
-    test_list();
+    run_test();
+
     return 0;
 }
 
