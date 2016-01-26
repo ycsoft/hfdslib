@@ -7,13 +7,19 @@
 #include "c_rb_tree.h"
 #include "c_list.h"
 
-#include "ctest.h"
+#include "c_hash.h"
+
+#include "test/ctest.h"
 
 
 int main(void)
 {
-    run_test();
+    int v;
+    char key[32] = {0};
+    c_map *map = NULL;
+    //run_test();
 
+    test_list();
     return 0;
 }
 
