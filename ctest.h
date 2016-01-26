@@ -6,8 +6,14 @@ extern "C"
 {
 #endif
 
-void test_list();
+void test_list(void);
 
+
+void test_init(void);
+
+void test_push_back(void);
+
+void run_test(void);
 
 #ifdef __cplusplus
 }
