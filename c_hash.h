@@ -1,7 +1,7 @@
 #ifndef C_HASH_H
 #define C_HASH_H
 
-#define MaxNodeCount        5
+#define MaxNodeCount        10000
 
 typedef   char*   _key_type;
 typedef   int     _value_type;
@@ -33,31 +33,41 @@ struct hash_node
 
 struct c_map
 {
-    uint32_t         (*size)(void);
+    uint32_t        _size;
 
-    hash_node*      (*create)(void);
-    _value_type     (*get)( _key_type key);
-    void            (*set)( _key_type key, _value_type value);
-    void            (*clear)(void);
+    hash_node       *_store[MaxNodeCount];
+    uint32_t         (*size)(c_map* mp);
+    _value_type     (*get)(c_map* mp ,_key_type key);
+    void            (*set)(c_map* mp , _key_type key, _value_type value);
+    void            (*free)(c_map* mp);
+    void            (*erase)(c_map *mp, _key_type key);
 };
 
 extern hash_node * __store[MaxNodeCount];
 extern uint32_t    __size;
 
-hash_node   *hash_node_new();
+/*create and init new node*/
+hash_node       *hash_node_new();
 
-uint32_t hash_value( const char * key);
-
-hash_node       *create(void);
-_value_type     get( _key_type key );
-void            set( _key_type key, _value_type value);
-
+/* caculate hash value of key*/
+uint32_t        hash_value( const char * key);
 uint32_t        getsize(void);
 
+hash_node       *_create(void);
+_value_type     _get( _key_type key );
+void            _set( _key_type key, _value_type value);
+void            _erase(_key_type key);
 void            _key_copy( _key_type dest, _key_type src);
 void            _value_copy( _value_type *dest, _value_type *src);
-
 void            _hash_free(void);
+
+c_map           *map_create(void);
+uint32_t        map_size(c_map *mp);
+_value_type     map_get(c_map *mp,_key_type key);
+void            map_set(c_map *mp,_key_type key, _value_type value);
+void            map_erase(c_map *mp, _key_type key);
+void            map_free(c_map *mp);
+
 
 
 #ifdef __cplusplus
