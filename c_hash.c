@@ -7,37 +7,43 @@
 
 #include "c_hash.h"
 
-hash_node * __store[MaxNodeCount];
-uint32_t    __size = 0;
 
-hash_node * _create(void)
+hash_node *lookup(c_map *map, _key_type key)
 {
-    size_t i = 0;
+    uint32_t  hashval = hash_value(key);
 
+    _bool_t   find = False;
 
-    for ( i = 0 ; i < MaxNodeCount; ++i)
+    hash_node *node = map->_store[ hashval ],*parent = NULL;
+
+    if ( !node ->inUse )
+        return node;
+
+    for ( ; node != NULL ; node = node ->next)
     {
-        hash_node *nd = hash_node_new();
-
-        __store[i] = nd;
+        parent = node;
+        if ( strcmp(node->key,key) == 0)
+        {
+            find = True;
+            return node;
+        }
     }
-    return __store;
+
+    if (!find )
+    {
+        node = hash_node_new();
+        parent->next = node;
+    }
+    return node;
 }
 
 uint32_t hash_value(const char *key)
 {
-    uint32_t hashval;
-//    uint32_t seed = 131;
-
-//    while ( *key )
-//    {
-//        hashval = hashval * seed + (*key++);
-//    }
-//    return (hashval & 0x7FFFFFFF)%MaxNodeCount;
+    uint32_t hashval = 0;
 
     for ( hashval = 0; *key != '\0'; key++)
     {
-        hashval = *key + 31 * hashval;
+        hashval +=  *key + 131 * hashval;
     }
 
     return hashval % MaxNodeCount;
@@ -45,106 +51,20 @@ uint32_t hash_value(const char *key)
 hash_node   *hash_node_new()
 {
     hash_node *node = (hash_node*)malloc(sizeof(hash_node));
-    node->key = (_key_type)malloc(sizeof(char)*32);
-    memset(node->key,0,32);
-    node->next = NULL;
-    node->inUse = False;
-    node->value = 0;
+
+    memset(node,0,sizeof(hash_node));
+    node->key = (_key_type)malloc(sizeof(char)*KEY_LEN);
+    memset(node->key,0,KEY_LEN);
     return node;
 }
 
 void   _key_copy( _key_type dest, _key_type src)
 {
-    strcpy(dest,src);
+    memcpy(dest,src,KEY_LEN);
 }
 void    _value_copy( _value_type *dest, _value_type *src)
 {
     *dest = *src;
-}
-_value_type _get(_key_type key)
-{
-    uint32_t            hashval = hash_value(key);
-    _value_type         res     = INVALID_VALUE;
-    hash_node           *nd     = __store[hashval];
-
-    while (nd->inUse && nd != NULL )
-    {
-        if ( strcmp(nd->key,key) == 0)
-        {
-            return nd->value;
-        }
-        nd = nd->next;
-    }
-
-    return res;
-}
-void _erase(_key_type key)
-{
-    uint32_t    hashval = hash_value(key);
-    hash_node   *node = __store[ hashval ];
-
-    while( node )
-    {
-        if( strcmp(node->key,key) == 0)
-        {
-            node->inUse = False;
-            --__size;
-            return;
-        }
-        node = node->next;
-    }
-}
-
-void _set(_key_type key, _value_type value)
-{
-    uint32_t hash = hash_value(key);
-    hash_node *cur = __store[hash],*nd = cur,*parent = nd,*save = NULL;
-    while( nd != NULL )
-    {
-        parent = nd;
-        if( nd->inUse )
-        {
-            if( strcmp(nd->key,key) == 0)
-            {
-                fprintf(stderr,"update...\n");
-                nd->value = value;
-                return;
-            }
-
-        }else
-        {
-            nd->inUse = True;
-            _key_copy(nd->key,key);
-            _value_copy(&nd->value,&value);
-            __size++;
-            return;
-        }
-        nd = nd->next;
-    }
-
-    fprintf(stderr,"allocate new node...\n");
-    save = hash_node_new();
-    parent->next = save;
-    save->inUse = True;
-
-    _key_copy(save->key,key);
-    _value_copy(&save->value,&value);
-    __size++;
-}
-
-uint32_t        getsize(void)
-{
-    return  __size;
-}
-
-void     _hash_free(void)
-{
-    size_t i = 0;
-    for ( i = 0 ; i < MaxNodeCount; ++i)
-    {
-        free(__store[i]);
-        __store[i] = NULL;
-    }
 }
 
 
@@ -175,64 +95,25 @@ uint32_t        map_size(c_map *mp)
 
 _value_type     map_get(c_map *mp,_key_type key)
 {
-    uint32_t  hashval   = hash_value(key);
-    hash_node *node     = mp->_store[hashval];
-    _value_type value   = INVALID_VALUE;
+    hash_node *node = lookup(mp,key);
 
-    while( node )
+    if ( node->inUse )
     {
-        /* found */
-        if ( strcmp(node->key, key) == 0 )
-        {
-            return node->value;
-        }else
-        {
-            node = node->next;
-        }
+        return node->value;
     }
-
-    return value;
 }
 
 void            map_set(c_map *mp,_key_type key, _value_type value)
 {
-    uint32_t       hashval = hash_value(key);
-    hash_node      *node   = mp->_store[ hashval ],
-                   *parent = NULL,
-                   *save   = NULL;
 
-    static          uint32_t  rp = 0;
+    hash_node *save = NULL;
 
-    while ( node )
-    {
-        parent = node;
-        if ( !node->inUse )
-        {
-            _key_copy(node->key,key);
-            _value_copy(&node->value,&value);
-            node->inUse = True;
-            mp->_size ++;
-            return;
-        }else if ( strcmp(node->key,key) == 0 )
-        {
-            fprintf(stderr,"updating...\n");
-            _value_copy(&node->value, &value);
-            return;
-        }else
-        {
-            node = node ->next;
-        }
-    }
+    save = lookup(mp,key);
 
-    ++rp;
-    fprintf(stderr,"repeat...times:%d\n",rp);
-
-    save = hash_node_new();
-    parent->next = save;
-    save->inUse = True;
+    save->value = value;
     _key_copy(save->key,key);
-    _value_copy(&save->value,&value);
-    mp->_size++;
+    save->inUse = True;
+
 }
 
 void            map_free(c_map *mp)
@@ -256,18 +137,12 @@ void            map_free(c_map *mp)
 
 void            map_erase(c_map *mp, _key_type key)
 {
-    uint32_t    hashval = hash_value(key);
-    hash_node   *node = mp->_store[ hashval ];
+    hash_node *node = lookup(mp,key);
 
-    while ( node )
+    if ( node->inUse )
     {
-        if ( strcmp(node->key,key) == 0 )
-        {
-            node->inUse = False;
-            mp->_size--;
-            node->value = INVALID_VALUE;
-            return;
-        }
-        node = node->next;
+       node->inUse = False;
+       memset(node->key,0,KEY_LEN);
     }
+
 }
