@@ -15,11 +15,17 @@
 void test_list(void)
 {
 
-    uint32_t  times = 1000 , i = 0;
+    const uint32_t  times = 100000 ;
+    uint32_t         i = 0;
     c_list *list = list_init();
     c_map  *mp = map_create();
     clock_t start,end;
-    char   key[32] = {0};
+    char   *key[times];
+    for ( i = 0 ; i < times; i++)
+    {
+        key[i] = (char*)malloc(sizeof(char)*32);
+        sprintf(key[i],"%d",i);
+    }
 
     std::list<c_list_node*>   clist;
 
@@ -52,13 +58,43 @@ void test_list(void)
     start = clock();
     for ( i = 0 ; i < times; ++i)
     {
-        sprintf(key,"%d",i+1);
-        mp->set(mp,key,i);
+        mp->set(mp,key[i],i);
     }
     mp->free(mp);
 
     end = clock();
     fprintf(stdout,"c_hash Time Ellapsed:%d\n",end-start);
+
+
+    for( i = 0 ; i < times; ++i)
+        free(key[i]);
+
+    start = clock();
+    for ( i = 0 ; i < times; ++i)
+    {
+        key[i] = (char*)malloc(32);
+    }
+    end = clock();
+    printf("malloc time:%d\n",end-start);
+
+    start = clock();
+    for ( i = 0 ; i < times; ++i)
+    {
+        sprintf(key[i],"Hello World");
+    }
+    end = clock();
+    printf("sprintf time:%d\n",end-start);
+
+    start = clock();
+    for ( i = 0 ; i < times; ++i)
+    {
+        memcpy(key[i],"Hello World",32);
+    }
+    end = clock();
+    printf("memcpy time:%d\n",end-start);
+
+    for( i = 0 ; i < times; ++i)
+        free(key[i]);
 
 }
 
