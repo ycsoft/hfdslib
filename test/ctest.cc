@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
-#include <list>
 #include <stdint.h>
 
 #include <CUnit.h>
@@ -27,7 +26,7 @@ void test_list(void)
         sprintf(key[i],"%d",i);
     }
 
-    std::list<c_list_node*>   clist;
+//    std::list<c_list_node*>   clist;
 
     start = clock();
     for ( i = 0 ; i < times; ++i)
@@ -42,17 +41,17 @@ void test_list(void)
     fprintf(stdout,"c_list Time Ellapsed:%d\n",(end-start));
 
 
-    start = clock();
-    for ( i = 0 ; i < times; ++i)
-    {
-        c_list_node *nd = list_node_new();
-        clist.push_back(nd);
-    }
-    clist.clear();
-    end = clock();
+//    start = clock();
+//    for ( i = 0 ; i < times; ++i)
+//    {
+//        c_list_node *nd = list_node_new();
+//        clist.push_back(nd);
+//    }
+//    clist.clear();
+//    end = clock();
 
 
-    fprintf(stdout,"c++ list Time Ellapsed:%d\n",end-start);
+//    fprintf(stdout,"c++ list Time Ellapsed:%d\n",end-start);
 
 
     start = clock();
