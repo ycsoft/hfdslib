@@ -6,17 +6,20 @@ extern "C"
 {
 #endif
 
-
 void test_init(void);
-
 void test_push_back(void);
 
 void run_test(void);
 
+void test_clock(void);
 void test_list(void);
+void test_std_list(void);
 void test_hash(void);
 void test_boost_map(void);
 void test_rb_tree(void);
+void test_rb_hash(void);
+
+void base_rb_hash(void);
 
 
 #ifdef __cplusplus
