@@ -48,9 +48,9 @@ dict_t  *dict_create()
     dict->keyCmp = _keyCmp;
     dict->set = dict_insert;
     dict->get = dict_get;
-    dict->iterator = rb_node_new(INVALID_KEY,INVALID_VALUE);
+//    dict->iterator = rb_node_new(INVALID_KEY,INVALID_VALUE);
 
-    dict->iterator = list_init();
+//    dict->iterator = list_init();
     return dict;
 }
 

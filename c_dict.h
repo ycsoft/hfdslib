@@ -22,7 +22,6 @@ struct dict_t
     void                (*set)(dict_t *dict,const key_type key,const value_type v );
     value_type          (*get)(dict_t *dict, key_type key);
     rb_node_t           *_store[ DICT_NODE_COUNT ];
-    c_list              *iterator;
 };
 
 uint32_t   _dict_hash_int(const int *k);
