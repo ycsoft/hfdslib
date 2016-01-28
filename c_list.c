@@ -36,8 +36,8 @@ c_list * list_init()
     list->head = head;
     list->tail = tail;
 
-    list->head->next = NULL;
-    list->tail ->pre = NULL;
+    list->head->next = list->tail;
+    list->tail ->pre = list->head;
 
     return list;
 }
@@ -50,66 +50,36 @@ void list_free(c_list *list)
     while(nd)
     {
         next = nd->next;
-        fprintf(stdout,"free :%s\n",nd->data);
         free(nd);
-        nd = NULL;
         nd = next;
     }
     free(list);
-    list = NULL;
 
 }
 
 void list_push_back(c_list *list, c_list_node *nd)
 {
-    if ( list == NULL )
-    {
-        return;
-    }
-    if ( list->head ->next == NULL )
-    {
-        list->head ->next = nd;
-        list->tail->pre = nd;
 
-        nd->pre = list->head;
-        nd->next = list->tail;
+    assert(nd != NULL);
+    assert(list != NULL);
 
-    }else
-    {
-        list->tail->pre->next = nd;
-        nd->pre = list->tail->pre;
-        list->tail->pre = nd;
-        nd->next = list->tail;
-    }
+    list->tail->pre ->next = nd;
+    nd->next = list->tail;
+    nd->pre = list->tail->pre;
+    list->tail->pre = nd;
     list->size++;
-
-    return;
-
 }
 
 void list_push_front(c_list *list, c_list_node *nd)
 {
 
-    c_list_node *cur = NULL;
+   assert(list != NULL);
+   assert(nd != NULL);
 
-    assert(list);
-    assert(nd);
+   list->head->next ->pre = nd;
 
-    if ( list->head ->next == NULL )
-    {
-        list->head->next = nd;
-        nd->pre = list->head;
-
-        list->tail->pre = nd;
-        nd->next = list->tail;
-    }else
-    {
-        cur = list->head->next;
-        cur->pre = nd;
-        nd->next = cur;
-        nd->pre = list->head;
-        list->head->next = nd;
-    }
+   nd->next = list->head->next;
+   nd->pre = list->head;
 }
 
 c_list_node *list_read_back(c_list *list)
