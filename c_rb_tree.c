@@ -15,6 +15,7 @@ rb_node_t * rb_node_new(key_type key, value_type value)
     node->left = NULL;
     node->right = NULL;
     node->color = RED;
+    node->used = 0;
 
     return node;
 }
@@ -73,10 +74,10 @@ rb_node_t * rb_node_rotate_right(rb_node_t *node, rb_node_t **root)
     {
         if ( node == node->parent ->right )
         {
-            node->parent ->right = node;
+            node->parent ->right = y;
         }else
         {
-            node->parent->left = node;
+            node->parent->left = y;
         }
     }else
     {
@@ -179,7 +180,7 @@ rb_node_t * rb_insert_rebalance(rb_node_t *node, rb_node_t **root)
             {
                 if ( parent->left == node )
                 {
-                    root = rb_node_rotate_right(parent,root);
+                    *root = rb_node_rotate_right(parent,root);
                     tmp = parent;
                     parent = node;
                     node = tmp;
@@ -192,6 +193,39 @@ rb_node_t * rb_insert_rebalance(rb_node_t *node, rb_node_t **root)
     }
     (*root) ->color = BLACK;
     return *root;
+}
+rb_node_t * rb_add_node( rb_node_t* adnode, rb_node_t **root)
+{
+    rb_node_t  *parent = NULL, *node = NULL;
+    int32_t   ret = 0;
+
+    if (( node = rb_search_auxiliary(*root,adnode->key,&parent)))
+    {
+        //found,cannot insert repeatly,so return
+        return NULL;
+    }
+
+    adnode->color = RED;
+    adnode->parent = parent;
+
+    ret = adnode->key - parent->key;
+
+    if ( parent )
+    {
+        if ( ret > 0 )
+        {
+            parent->right = adnode;
+        }else if ( ret < 0 )
+        {
+            parent ->left = adnode;
+        }
+    }else
+    {
+        //空树
+        *root = adnode;
+    }
+
+    return rb_insert_rebalance(adnode,root);
 }
 
 rb_node_t * rb_insert(const key_type key, const value_type value, rb_node_t **root)
@@ -455,5 +489,4 @@ void rb_free(rb_node_t *root)
     free(root);
     rb_free(left);
     rb_free(right);
-
 }
