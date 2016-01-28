@@ -48,21 +48,23 @@ struct rb_tree
 rb_node_t * rb_node_new(key_type key, value_type value);
 void        rb_node_free(rb_node_t * node);
 
-rb_node_t * rb_node_rotate_left( rb_node_t *node, rb_node_t *root);
+rb_node_t * rb_node_rotate_left( rb_node_t *node, rb_node_t **root);
 
-rb_node_t * rb_node_rotate_right(rb_node_t *node, rb_node_t *root);
+rb_node_t * rb_node_rotate_right(rb_node_t *node, rb_node_t **root);
 
 rb_node_t * rb_search_auxiliary(rb_node_t *root, key_type key, rb_node_t **save);
 
 rb_node_t * rb_search(rb_node_t *root, key_type key);
 
-rb_node_t * rb_insert_rebalance(rb_node_t *node, rb_node_t *root);
-rb_node_t * rb_insert(const key_type key, const value_type value, rb_node_t *root);
+rb_node_t * rb_insert_rebalance(rb_node_t *node, rb_node_t **root);
+rb_node_t * rb_insert(const key_type key, const value_type value, rb_node_t **root);
 
 
 rb_node_t * rb_erase_balance(rb_node_t *node, rb_node_t *parent, rb_node_t *root);
 
 rb_node_t * rb_erase(const key_type key, rb_node_t *root);
+
+void        rb_free( rb_node_t *root);
 
 #ifdef __cplusplus
 }

@@ -28,7 +28,7 @@ void rb_node_free(rb_node_t *node)
     }
 }
 
-rb_node_t * rb_node_rotate_left(rb_node_t *node, rb_node_t *root)
+rb_node_t * rb_node_rotate_left(rb_node_t *node, rb_node_t **root)
 {
 
     rb_node_t *y = node->right;
@@ -51,13 +51,13 @@ rb_node_t * rb_node_rotate_left(rb_node_t *node, rb_node_t *root)
         }
     }else //node节点为跟节点
     {
-        root = y;
+        *root = y;
     }
     node->parent = y;
-    return root;
+    return *root;
 }
 
-rb_node_t * rb_node_rotate_right(rb_node_t *node, rb_node_t *root)
+rb_node_t * rb_node_rotate_right(rb_node_t *node, rb_node_t **root)
 {
 
     rb_node_t * y = node->left;
@@ -80,12 +80,12 @@ rb_node_t * rb_node_rotate_right(rb_node_t *node, rb_node_t *root)
         }
     }else
     {
-        root = y;
+        *root = y;
     }
 
     node->parent = y;
 
-    return root;
+    return *root;
 }
 
 rb_node_t * rb_search_auxiliary(rb_node_t *root, key_type key, rb_node_t **save)
@@ -124,7 +124,7 @@ rb_node_t * rb_search(rb_node_t *root, key_type key)
     return rb_search_auxiliary(root,key,NULL);
 }
 
-rb_node_t * rb_insert_rebalance(rb_node_t *node, rb_node_t *root)
+rb_node_t * rb_insert_rebalance(rb_node_t *node, rb_node_t **root)
 {
     rb_node_t *parent,*gparent,*uncle,*tmp;
 
@@ -133,6 +133,10 @@ rb_node_t * rb_insert_rebalance(rb_node_t *node, rb_node_t *root)
     {
 
         gparent = parent->parent;
+        if( NULL == gparent )
+        {
+            break;
+        }
 
         if ( parent == gparent->left) //当父节点为祖父节点的左孩子时
         {
@@ -150,7 +154,7 @@ rb_node_t * rb_insert_rebalance(rb_node_t *node, rb_node_t *root)
                 //case 2: z的叔叔为黑色
                 if ( parent ->right == node ) //z为父节点的右孩子
                 {
-                    root = rb_node_rotate_left(parent,root);
+                    *root = rb_node_rotate_left(parent,root);
                     tmp = parent;
                     parent = node;
                     node = tmp;
@@ -158,7 +162,7 @@ rb_node_t * rb_insert_rebalance(rb_node_t *node, rb_node_t *root)
                 //Case 3:z的叔叔是黑色，此时z成为左孩子
                 parent->color = BLACK;
                 gparent->color = RED;
-                root = rb_node_rotate_right(gparent,root);
+                *root = rb_node_rotate_right(gparent,root);
             }
 
         }else
@@ -182,20 +186,20 @@ rb_node_t * rb_insert_rebalance(rb_node_t *node, rb_node_t *root)
                 }
                 parent ->color = BLACK;
                 gparent ->color = RED;
-                root = rb_node_rotate_left(gparent,root);
+                *root = rb_node_rotate_left(gparent,root);
             }
         }
     }
-    root ->color = BLACK;
-    return root;
+    (*root) ->color = BLACK;
+    return *root;
 }
 
-rb_node_t * rb_insert(const key_type key, const value_type value, rb_node_t *root)
+rb_node_t * rb_insert(const key_type key, const value_type value, rb_node_t **root)
 {
     rb_node_t  *parent = NULL, *node = NULL;
     int32_t   ret = 0;
 
-    if (( node = rb_search_auxiliary(root,key,&parent)))
+    if (( node = rb_search_auxiliary(*root,key,&parent)))
     {
         //found,cannot insert repeatly,so return
         return NULL;
@@ -219,10 +223,10 @@ rb_node_t * rb_insert(const key_type key, const value_type value, rb_node_t *roo
     }else
     {
         //空树
-        root = node;
+        *root = node;
     }
 
-    return rb_insert_rebalance(node,root);;
+    return rb_insert_rebalance(node,root);
 
 }
 
@@ -434,4 +438,22 @@ rb_node_t * rb_erase(const key_type key, rb_node_t *root)
         root = rb_erase_balance(child,parent,root);
     }
     return root;
+}
+
+
+void rb_free(rb_node_t *root)
+{
+    rb_node_t *parent = root, *left = NULL , * right = NULL ,*gparent;
+
+    if ( parent == NULL )
+    {
+        return;
+    }
+    left = root->left;
+    right = root->right;
+
+    free(root);
+    rb_free(left);
+    rb_free(right);
+
 }
