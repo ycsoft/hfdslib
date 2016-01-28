@@ -3,99 +3,20 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdint.h>
-
 #include <CUnit.h>
 #include <Basic.h>
+
+#include <boost/unordered_map.hpp>
 
 #include "c_hash.h"
 #include "ctest.h"
 #include "c_list.h"
-
-void test_list(void)
-{
-
-    const uint32_t  times = 100000 ;
-    uint32_t         i = 0;
-    c_list *list = list_init();
-    c_map  *mp = map_create();
-    clock_t start,end;
-    char   *key[times];
-    for ( i = 0 ; i < times; i++)
-    {
-        key[i] = (char*)malloc(sizeof(char)*32);
-        sprintf(key[i],"%d",i);
-    }
-
-//    std::list<c_list_node*>   clist;
-
-    start = clock();
-    for ( i = 0 ; i < times; ++i)
-    {
-        c_list_node *nd = list_node_new();
-        list_push_back(list,nd);
-    }
-    free(list);
-    end = clock();
+#include "c_rb_tree.h"
 
 
-    fprintf(stdout,"c_list Time Ellapsed:%d\n",(end-start));
+#define times    7000
+#define runtimes 100
 
-
-//    start = clock();
-//    for ( i = 0 ; i < times; ++i)
-//    {
-//        c_list_node *nd = list_node_new();
-//        clist.push_back(nd);
-//    }
-//    clist.clear();
-//    end = clock();
-
-
-//    fprintf(stdout,"c++ list Time Ellapsed:%d\n",end-start);
-
-
-    start = clock();
-    for ( i = 0 ; i < times; ++i)
-    {
-        mp->set(mp,key[i],i);
-    }
-    mp->free(mp);
-
-    end = clock();
-    fprintf(stdout,"c_hash Time Ellapsed:%d\n",end-start);
-
-
-    for( i = 0 ; i < times; ++i)
-        free(key[i]);
-
-    start = clock();
-    for ( i = 0 ; i < times; ++i)
-    {
-        key[i] = (char*)malloc(32);
-    }
-    end = clock();
-    printf("malloc time:%d\n",end-start);
-
-    start = clock();
-    for ( i = 0 ; i < times; ++i)
-    {
-        sprintf(key[i],"Hello World");
-    }
-    end = clock();
-    printf("sprintf time:%d\n",end-start);
-
-    start = clock();
-    for ( i = 0 ; i < times; ++i)
-    {
-        memcpy(key[i],"Hello World",32);
-    }
-    end = clock();
-    printf("memcpy time:%d\n",end-start);
-
-    for( i = 0 ; i < times; ++i)
-        free(key[i]);
-
-}
 
 void test_init(void)
 {
@@ -109,31 +30,32 @@ void test_init(void)
 
 void test_hash(void)
 {
-    c_map  *map = map_create();
+    int i = 0 , j = 0;
+    clock_t start, end;
+    c_map   * map = map_create();
 
-    map->set(map,"1",1);
-    map->set(map,"2",2);
-    map->set(map,"3",3);
-    map->set(map,"4",4);
-    map->set(map,"5",5);
-    map->set(map,"6",6);
-    map->set(map,"7",7);
+    char   *key[times];
 
-    CU_ASSERT( map->size(map) == 7);
-    CU_ASSERT( map->get(map,"1") == 1);
-    CU_ASSERT( map->get(map,"2") == 2);
-    CU_ASSERT( map->get(map,"3") == 3);
-    CU_ASSERT( map->get(map,"4") == 4);
-    CU_ASSERT( map->get(map,"5") == 5);
-    CU_ASSERT( map->get(map,"6") == 6);
-    CU_ASSERT( map->get(map,"7") == 7);
+    for ( i = 0 ; i < times; i++)
+    {
+        key[i] = (char*)malloc(sizeof(char)*32);
+        sprintf(key[i],"%d",i);
+    }
 
-    map->erase(map,"6");
-    CU_ASSERT(map->get(map,"6") == INVALID_VALUE);
-
-    CU_ASSERT(map->size(map) == 6);
-
+    start = clock();
+    for( j = 0 ;j < runtimes; ++j)
+    for ( i = 0 ; i < times; ++i)
+    {
+        map->set(map,key[i],i);
+    }
+    end = clock();
+    fprintf(stdout,"c hash Time Ellapsed:%d\n",end-start);
     map->free(map);
+
+    for ( i = 0 ; i < times; i++)
+    {
+        free(key[i]);
+    }
 }
 
 void test_push_back(void)
@@ -202,4 +124,68 @@ void run_test(void)
     fprintf(stderr,"Test Complete: Return: %d\n",ret);
 }
 
+void test_list(void)
+{
+        uint32_t         i = 0 , j = 0;
+        c_list          *list = list_init();
+        clock_t         start,end;
+        const char*     pstr;
 
+        start = clock();
+        for ( j = 0 ; j < runtimes; ++j)
+        for ( i = 0 ; i < times; ++i)
+        {
+            c_list_node *nd = list_node_new();
+            list_push_back(list,nd);
+        }
+        end = clock();
+        list_free(list);
+        fprintf(stdout,"c_list Time Ellapsed:%d\n",(end-start));
+}
+
+void test_boost_map(void)
+{
+    int i = 0 , j = 0;
+    clock_t start, end;
+    boost::unordered_map<char*,int> boost_map;
+    char   *key[times];
+
+    for ( i = 0 ; i < times; i++)
+    {
+        key[i] = (char*)malloc(sizeof(char)*32);
+        sprintf(key[i],"%d",i);
+    }
+
+
+    start = clock();
+    for( j = 0 ;j < runtimes; ++j)
+    for ( i = 0 ; i < times; ++i)
+    {
+        boost_map.insert(std::make_pair(key[i],i));
+    }
+    end = clock();
+    fprintf(stdout,"boost::map Time Ellapsed:%d\n",end-start);
+
+    for ( i = 0 ; i < times; i++)
+    {
+        free(key[i]);
+    }
+}
+void test_rb_tree(void)
+{
+    uint32_t         i = 0 , j = 0;
+    rb_node_t       *rb = rb_node_new(0,0);
+    clock_t         start,end;
+
+    start = clock();
+    for ( j = 0 ; j < runtimes; ++j)
+    for ( i = 0 ; i < times; ++i)
+    {
+        rb_insert(i+1,i+1,&rb);
+    }
+    rb_free(rb);
+    end = clock();
+
+    fprintf(stdout,"rb_tree Time Ellapsed:%d\n",end-start);
+
+}
