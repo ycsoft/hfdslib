@@ -4,41 +4,50 @@
 #include <stdio.h>
 #include <time.h>
 #include <map>
+#include <assert.h>
 
 #include <boost/unordered_map.hpp>
 
 //#include "c_list.h"
-//#include "c_hash.h"
-//#include "c_rb_tree.h"
-#include "c_dict.h"
+//#include "c_vector.h"
 
 #include "test/ctest.h"
-#include "test/utils.h"
 
-#define times 10000
-#define runtimes 100
+#include "c_rb_tree.h"
+#include "c_dict.h"
+#include <stddef.h>
 
-typedef struct _Test
+#ifdef __cplusplus
+extern "C"
 {
-    int a;
-    int b;
-    struct _Test  *next;
-}_Test;
+#endif
 
-typedef char ** pp_c;
+extern void  ex_vector(void);
+extern void  ex_list(void);
 
+typedef int*  PT;
 int main(void)
 {
 
-//    test_hash();
-//    test_list();
-//    test_boost_map();
-//    test_rb_tree();
+    uint32_t    h = 0;
+    dict_t  *dict  = (dict_t*)malloc(sizeof(dict_t));
 
-//    test_clock();
+    Dict_Create(int,int,dict);
+    Dict_Insert(int,int,dict,1,5);
+    Dict_Insert(int,int,dict,3,7);
 
+    Dict_Insert(int,int,dict,2,15);
+    Dict_Insert(int,int,dict,4,17);
+    Dict_Insert(int,int,dict,5,15);
+    Dict_Insert(int,int,dict,7,17);
+    printf("Over");
+//    Dict_Get(int,int,dict,5,&h);
 
-    run_test();
+//    printf("%d\n",h);
 
     return 0;
 }
+
+#ifdef __cplusplus
+}
+#endif

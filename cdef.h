@@ -1,14 +1,14 @@
 #ifndef CDEF_H
 #define CDEF_H
 
-
-#define     CPP_C_BEGIN   #ifdef __cplusplus \
-                           extern "C"{ \
-                          #endif
-
-#define     CPP_C_END     #ifdef __cplusplus \
-                            } \
-                          #endif
+typedef struct _TS
+{
+    int i;
+    int j;
+    int k;
+    int x;
+    int y;
+}_TS;
 
 
 
