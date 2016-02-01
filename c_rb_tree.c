@@ -9,6 +9,7 @@ rb_node_t * rb_node_new(key_type key, value_type value)
 {
     rb_node_t *node = (rb_node_t*)malloc(sizeof(rb_node_t));
 
+
     node->key = key;
     node->value = value;
     node->parent = NULL;
@@ -19,6 +20,7 @@ rb_node_t * rb_node_new(key_type key, value_type value)
 
     return node;
 }
+
 
 void rb_node_free(rb_node_t *node)
 {
@@ -93,7 +95,7 @@ rb_node_t * rb_search_auxiliary(rb_node_t *root, key_type key, rb_node_t **save)
 {
     rb_node_t *parent = NULL,*node;
     int32_t   ret = 0;
-
+/*
     node = root;
 
     while ( node )
@@ -116,7 +118,7 @@ rb_node_t * rb_search_auxiliary(rb_node_t *root, key_type key, rb_node_t **save)
     {
         *save = parent;
     }
-
+*/
     return NULL;
 }
 
@@ -208,7 +210,7 @@ rb_node_t * rb_add_node( rb_node_t* adnode, rb_node_t **root)
     adnode->color = RED;
     adnode->parent = parent;
 
-    ret = adnode->key - parent->key;
+    //ret = adnode->key - parent->key;
 
     if ( parent )
     {
@@ -235,7 +237,6 @@ rb_node_t * rb_insert(const key_type key, const value_type value, rb_node_t **ro
 
     if (( node = rb_search_auxiliary(*root,key,&parent)))
     {
-        //found,cannot insert repeatly,so return
         return NULL;
     }
 
@@ -243,7 +244,7 @@ rb_node_t * rb_insert(const key_type key, const value_type value, rb_node_t **ro
     node->color = RED;
     node->parent = parent;
 
-    ret = key - parent->key;
+    //ret = key - parent->key;
 
     if ( parent )
     {
