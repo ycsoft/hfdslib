@@ -6,6 +6,8 @@ extern "C"
 {
 #endif
 
+
+
 void  print_prime(const int start, const int end);
 
 #ifdef __cplusplus
