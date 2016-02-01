@@ -27,7 +27,8 @@ uint32_t   _dict_hash_int(const int *k)
 
 int         _keyCmp(key_type *k1,key_type *k2)
 {
-    return ((*k1) - (*k2));
+    return 0;
+    //return ((*k1) - (*k2));
 }
 
 dict_t  *dict_create()
@@ -69,12 +70,10 @@ rb_node_t * _dict_search(dict_t *dict, key_type key , uint32_t *hsh)
     }
     if (dict->keyCmp(&key, &(rbnode->key)) == 0)
         return rbnode;
-
     /**check if key exists in the hash chain**/
     lastrb = rb_search(rbnode,key);
     if (lastrb != NULL)
         return lastrb;
-
     /**key not exists, find empty node to store it**/
     for ( ; i < DICT_NODE_COUNT; ++i)
     {
@@ -84,9 +83,7 @@ rb_node_t * _dict_search(dict_t *dict, key_type key , uint32_t *hsh)
             return rb_add_node(lastrb,&rbnode);
         }
     }
-
     /**here, we know that the table is full**/
-
     return NULL;
 }
 

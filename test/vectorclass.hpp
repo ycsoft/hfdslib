@@ -1,0 +1,4 @@
+#ifndef VECTORCLASS_H
+#define VECTORCLASS_H
+
+#endif // VECTORCLASS_H
