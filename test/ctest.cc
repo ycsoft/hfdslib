@@ -1,4 +1,4 @@
-
+﻿
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
@@ -21,8 +21,8 @@
 #include "test/listclass.hpp"
 #include "test/vectorclass.hpp"
 
-#define times    100
-#define runtimes 40
+#define times    5000
+#define runtimes 80
 
 typedef struct _Test
 {
@@ -50,31 +50,33 @@ void test_clock(void)
     fprintf(stdout,"clock Time Ellapsed:%dms\n",end-start);
 }
 void test_rb_hash(void)
-{/*
+{
     int i = 0 , j = 0;
     clock_t start, end;
-    dict_t  *dict = dict_create();
+    dict_t  *dict = (dict_t*)malloc(sizeof(dict_t));
 
 
+    XD_INT          test = {{INT,4,Default_Compare,Default_Copy},0};
+
+    Dict_Init(dict,sizeof(XD_INT),sizeof(XD_INT));
     start = clock();
+
     for( j = 0 ;j < runtimes; ++j)
     {
-
     for ( i = 0 ; i < times; ++i)
     {
-        dict->set(dict,i,j);
+        XD_INT          ik1 = {{INT,4,Default_Compare,Default_Copy},i};
+        XD_INT          v1 = {{INT,4,Default_Compare,Default_Copy},i};
+        Dict_Insert(dict,(&ik1),(&v1));
     }
     }
     end = clock();
     fprintf(stdout,"HF_Map Time Ellapsed:%dms\n",end-start);
-    */
+
 }
 
 void base_rb_hash(void)
 {
-    int i = 0 , j = 0;
-
-
 }
 
 void test_hash(void)
@@ -114,14 +116,7 @@ void test_hash(void)
 
 void base_vector(void)
 {
-//    pc_vector   vec = vector_init(10);
-//    int i = 0;
 
-//    for ( ; i < 1000000; ++i )
-//    {
-//        push_back(vec,i);
-//        CU_ASSERT(i == vect_get(vec,i));
-//    }
 }
 
 void run_test(void)
@@ -137,7 +132,6 @@ void run_test(void)
     {
         {"base_vector",base_vector},
 //        {"HF_HashMap",test_hash},
-//        {"HF_Map",test_rb_hash},
         {"CPLUS List",test_cplus_list},
         {"HF_List",test_list},
         {"Std::List",test_std_list},
@@ -145,6 +139,7 @@ void run_test(void)
         {"HF_CPLUS_Vector",test_cplus_vector},
         {"std_vector",test_std_vector},
         {"boost unorderd_map",test_boost_map},
+                {"HF Dict",test_rb_hash},
 //        {"HF Tree",test_rb_tree},
 //        {"Test Malloc",test_malloc},
 //        {"Test Realloc",test_realloc},
@@ -350,15 +345,7 @@ void test_boost_map(void)
 {
     int i = 0 , j = 0;
     clock_t start, end;
-    boost::unordered_map<char*,int> boost_map;
-    char   *key[times];
-
-    for ( i = 0 ; i < times; i++)
-    {
-        key[i] = (char*)malloc(sizeof(char)*32);
-        sprintf(key[i],"%dms",i);
-    }
-
+    boost::unordered_map<int,int> boost_map;
 
     start = clock();
     for( j = 0 ;j < runtimes; ++j)
@@ -366,17 +353,13 @@ void test_boost_map(void)
 
         for ( i = 0 ; i < times; ++i)
         {
-            boost_map.insert(std::make_pair(key[i],i));
+            boost_map.insert(std::make_pair(i,i));
         }
 
     }
     end = clock();
     fprintf(stdout,"boost::unorderd_map Time Ellapsed:%dms\n",end-start);
 
-    for ( i = 0 ; i < times; i++)
-    {
-        free(key[i]);
-    }
 }
 void test_rb_tree(void)
 {
