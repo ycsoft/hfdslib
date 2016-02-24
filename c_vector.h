@@ -1,4 +1,4 @@
-#ifndef C_VECTOR_H
+﻿#ifndef C_VECTOR_H
 #define C_VECTOR_H
 
 #ifdef __cplusplus
@@ -8,7 +8,9 @@ extern "C"
 /////////////////////////////////////////////////////
 
 #define vec_value_type  void*
+#define Vector          hfvector
 
+#define         Vector_New()    (phfvector)malloc(sizeof(hfvector))
 
 #define         Vector_Create(Type,vec,sz)  \
     create_vector(vec,sizeof(Type),sz)
@@ -45,6 +47,7 @@ typedef struct _vector
 c_vector,*pc_vector;
 
 typedef struct _hfvector    hfvector,*phfvector;
+
 
 struct _hfvector
 {
