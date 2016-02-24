@@ -280,7 +280,7 @@ rb_node_t * rb_erase_balance(rb_node_t *node, rb_node_t *parent, rb_node_t *root
             {
                 other->color = BLACK;
                 parent->color = RED;
-                root = rb_node_rotate_left(parent,root);
+                root = rb_node_rotate_left(parent,&root);
                 other = parent ->right;
             }
             //CASE 2
@@ -299,7 +299,7 @@ rb_node_t * rb_erase_balance(rb_node_t *node, rb_node_t *parent, rb_node_t *root
                         o_left->color = BLACK;
                     }
                     other->color = RED;
-                    root = rb_node_rotate_right(other,root);
+                    root = rb_node_rotate_right(other,&root);
                     other = parent->right;
                 }
                 //case 4:
@@ -309,7 +309,7 @@ rb_node_t * rb_erase_balance(rb_node_t *node, rb_node_t *parent, rb_node_t *root
                 {
                     other->right->color = BLACK;
                 }
-                root = rb_node_rotate_left(parent,root);
+                root = rb_node_rotate_left(parent,&root);
                 node = root;
                 break;
             }
@@ -321,7 +321,7 @@ rb_node_t * rb_erase_balance(rb_node_t *node, rb_node_t *parent, rb_node_t *root
             {
                 other->color = BLACK;
                 parent->color = RED;
-                root = rb_node_rotate_right(parent,root);
+                root = rb_node_rotate_right(parent,&root);
                 other = parent->left;
             }
             if ((!other->left || other->left->color == BLACK) &&
@@ -339,7 +339,7 @@ rb_node_t * rb_erase_balance(rb_node_t *node, rb_node_t *parent, rb_node_t *root
                         o_right->color = BLACK;
                     }
                     other->color = RED;
-                    root = rb_node_rotate_left(other,root);
+                    root = rb_node_rotate_left(other,&root);
                     other = parent->left;
                 }
                 other->color = parent->color;
@@ -348,7 +348,7 @@ rb_node_t * rb_erase_balance(rb_node_t *node, rb_node_t *parent, rb_node_t *root
                 {
                     other->left->color = BLACK;
                 }
-                root = rb_node_rotate_right(parent,root);
+                root = rb_node_rotate_right(parent,&root);
                 node = root;
                 break;
             }

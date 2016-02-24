@@ -1,7 +1,8 @@
-#ifndef C_RB_TREE_H
+﻿#ifndef C_RB_TREE_H
 #define C_RB_TREE_H
 
 
+#include "cdef.h"
 
 typedef void* key_type;
 typedef void* value_type;
@@ -18,17 +19,76 @@ extern "C"
 {
 #endif
 
-#define         Tree_Node_Init(KT,VT,N,K,V)    \
-{    N->key   = malloc(sizeof(KT));   \
-    N->value = malloc(sizeof(VT));   \
-    *(KT*)N->key = K;  \
-    *(VT*)N->value = V;  \
+#define         Tree_Node_Init(N,K,V)    \
+{\
+    int _KT = getType(K),_VT = getType(V);\
+    int KSZ = ((BaseType*)K)->size + sizeof(BaseType), VSZ = ((BaseType*)V)->size + sizeof(BaseType);\
+    N->key   = malloc(KSZ);   \
+    N->value = malloc(VSZ);\
+    assert(N->key!=NULL);assert(N->value!=NULL);\
+    N->ksz = KSZ;\
+    N->vsz = VSZ;\
     N->parent = NULL;    \
     N->left = NULL;  \
     N->right = NULL; \
     N->color = RED;  \
     N->used = 0;\
+    switch( _KT){\
+      case INT:\
+      case REAL:\
+      case BOOL:\
+      case STRING:\
+        {\
+          Default_Copy(N->key,K);\
+          break; \
+        }\
+    default:{((BaseType*)K)->copy(N->key,K);break;}\
+    }\
+    switch( _VT){\
+      case INT:\
+      case REAL:\
+      case BOOL:\
+      case STRING:\
+        {\
+          Default_Copy(N->value,V); \
+          break;\
+        }\
+      default:{((BaseType*)V)->copy(N->value,V);break;}\
+    }\
 }
+
+#define         Node_Set(N,K,V)    \
+{\
+    int _KT = getType(K),_VT = getType(V);\
+    N->parent = NULL;    \
+    N->left = NULL;  \
+    N->right = NULL; \
+    N->color = RED;  \
+    N->used = 0;\
+    switch( _KT){\
+      case INT:\
+      case REAL:\
+      case BOOL:\
+      case STRING:\
+        {\
+          Default_Copy(N->key,K);\
+          break; \
+        }\
+    default:{((BaseType*)K)->copy(N->key,K);break;}\
+    }\
+    switch( _VT){\
+      case INT:\
+      case REAL:\
+      case BOOL:\
+      case STRING:\
+        {\
+          Default_Copy(N->value,V); \
+          break;\
+        }\
+      default:{((BaseType*)V)->copy(N->value,V);break;}\
+    }\
+}
+
 
 /**
 root: pointer,root node
@@ -36,109 +96,64 @@ K: key
 save : pointer to pointer, resutl's parent
 res: pointer to pointer, result
 **/
-#define         _tree_search(KT,base,K,save,res)\
+#define         _tree_search(R,K,CMP,SV,RS)\
 {\
-    rb_node_t *pt = NULL,*nd;\
-    int32_t   ret = 0;\
-    nd = base;\
-    printf("0x%x\n",nd);\
-    while ( nd )  \
+    rb_node_t *ts_pt = NULL,*ts_nd;\
+    int        ret = 0;\
+    ts_nd = R;\
+    while ( ts_nd )  \
     {   \
-        pt = nd;\
-        printf("3 %d\n",K);\
-        ret = K - ( *(KT*)nd->key );\
-        printf("4\n");\
-        printf("ret=%d\n",ret);\
+        ts_pt = ts_nd;\
+        ret = CMP(K,ts_nd->key);\
         if ( ret > 0)\
         {\
-            nd = nd->right;\
-            *res = nd;\
+            ts_nd = ts_nd->right;\
+            *RS = ts_nd;\
         }else if( ret < 0)\
         {\
-            nd = nd->left;\
-            *res = nd;\
+            ts_nd = ts_nd->left;\
+            *RS = ts_nd;\
         }else\
         {\
-            *res = nd;\
+            *RS = ts_nd;\
             break;\
         }\
     }\
-    if ( save )\
+    if ( SV )\
     {\
-        *save = pt;\
+        *SV = ts_pt;\
     }\
 }
 
-#define     Tree_Add_Node(KT,VT,ND,RT) \
+#define     Tree_Add_Node(ND,RT) \
 {\
-    rb_node_t  *parent = NULL, *nd = NULL,*root = (*RT);\
-    rb_node_t  **pa = &parent,**pn = &nd;\
+    rb_node_t  *ad_parent = NULL, *ad_nd = NULL,*ad_root = *RT;\
     int32_t   ret = 0;\
-    printf("1\n");\
-    _tree_search(KT,*RT,*(KT*)ND->key,pa,pn);    \
-    printf("2\n");\
-    if ( !node )\
+    int     (*compare)(void *a1,void *a2);\
+    compare = Default_Compare;\
+    _tree_search(*RT,ND->key,compare,&ad_parent,&ad_nd);    \
+    if ( !ad_nd )\
     {\
     ND->color = RED;\
-    ND->parent = parent;\
-    if ( parent )\
+    ND->parent = ad_parent;\
+    if ( ad_parent )\
     {\
-        ret = *(KT*)ND->key - (*(KT*)root->key);\
+        ret = compare(ND->key,ad_root->key);\
         if ( ret > 0 )\
         {\
-            parent->right = ND;\
+            ad_parent->right = ND;\
         }else if ( ret < 0 )\
         {\
-            parent->left = ND;\
+            ad_parent->left = ND;\
         }\
     }else\
     {\
         *RT = ND;\
     }\
-    printf("to balance\n");\
     rb_insert_rebalance(ND,RT);\
     }\
 }
 //root : pointer to pointer
-#define     Tree_Insert(KT,VT,K,V,root)\
-{\
-    rb_node_t  *parent = NULL, *node = NULL;\
-    int32_t   ret = 0;\
-    _tree_search(KT,*root,K,&parent,&node);\
-    printf("search ok\n");\
-    if ( node )\
-    {\
-        *(KT*)node->key = K;\
-        *(VT*)node->value = V;\
-    }else{\
-        node = (rb_node_t*)malloc(sizeof(rb_node_t));\
-        memset(node,0,sizeof(rb_node_t));\
-        node->key = malloc(sizeof(KT));\
-        node ->value = malloc(sizeof(VT));\
-        *(KT*)node->key = K;\
-        *(VT*)node->value = V;\
-        \
-        node->color = RED;\
-        node->parent = parent;\
-        ret = K - (*(KT*)parent->key);\
-        if ( parent )\
-        {\
-            if ( ret > 0 )\
-            {\
-                parent->right = node;\
-            }else if ( ret < 0 )\
-            {\
-                parent ->left = node;\
-            }\
-        }else\
-        {\
-            *root = node;\
-        }\
-        rb_insert_rebalance(node,root);\
-    }\
-}
-
-
 enum COLOR
 {
     INIT    = 0x00000000,
@@ -157,8 +172,16 @@ struct rb_node_t
     void*       key;
     void*       value;
 
+    int         ksz; //key size
+    int         vsz; //value size
+
+    int         (*_key_compare)(void* k1,void* k2);
+    void        (*_key_copy)(void *dest, void *src);
+    void        (*_value_copy)(void *dest, void* src);
+
     COLOR     color;
     int       used;
+
 };
 
 struct rb_tree
@@ -166,6 +189,7 @@ struct rb_tree
     rb_node_t *root;
     uint32_t   nodecount;
 };
+
 
 rb_node_t * rb_node_new(key_type key, value_type value);
 rb_node_t * _rbnode_new(int ksz,int vsz, void *k,void*v);
