@@ -1,10 +1,12 @@
-
+﻿
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
+#include "c_rb_tree.h"
+#include "c_list.h"
 #include "c_dict.h"
 
 
@@ -28,7 +30,27 @@ uint32_t   _dict_hash_int(const int *k)
 int         _keyCmp(key_type *k1,key_type *k2)
 {
     return 0;
-    //return ((*k1) - (*k2));
+}
+int             _NUM_CMP(void*K1,void*K2)
+{
+    return *(int*)K1 - *(int*)K2;
+}
+
+int             _KEY_CMP(void* X1, void *X2, int len)
+{
+    int kcmp_i = 0,_cmp_res = 0;
+    char _cmp[128] = {0};
+
+    for ( ; kcmp_i < len; ++kcmp_i )
+    {
+        _cmp[kcmp_i] = (*((char*)X1+kcmp_i)) - (*((char*)X2+kcmp_i));
+    }
+    for ( kcmp_i = 0 ; kcmp_i < len; ++kcmp_i )
+    {
+        if ( (int)_cmp[kcmp_i] == 0 ) continue;
+        _cmp_res = (int)_cmp[kcmp_i];
+    }
+    return _cmp_res;
 }
 
 dict_t  *dict_create()

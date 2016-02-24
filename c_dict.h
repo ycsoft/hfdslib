@@ -1,4 +1,4 @@
-#ifndef C_DICT_H
+﻿#ifndef C_DICT_H
 #define C_DICT_H
 
 
@@ -8,28 +8,61 @@ extern "C"{
 
 #include <stddef.h>
 
-#include "c_rb_tree.h"
-#include "c_list.h"
+#include "c_vector.h"
+#include "cdef.h"
 
-#define     DICT_NODE_COUNT     3251
+#define     XD_Dict     dict_t
+
+#define     DICT_NODE_COUNT     9973
+
+#define     REHS_STEP           3
+
 
 #define     Dict_Hash(K, R)    \
             {\
-              uint32_t  x = (uint32_t)(ptrdiff_t)K;      \
-              *R = (x + x >> 3) % DICT_NODE_COUNT; \
+              int  __x = (uint32_t)(ptrdiff_t)((XD_INT*)K)->_value;      \
+              *R = (__x + (__x >> 3)) % DICT_NODE_COUNT; \
             }
 
-#define     Dict_Create(KT,VT,D) \
+#define     Dict_New()      (SP_Dict*)malloc(sizeof(SP_Dict))
+
+#define     Dict_Init(D,KSZ,VSZ) \
 {\
-    size_t      i = 0;\
-    memset(D,0,sizeof(dict_t));\
-    for ( ; i < DICT_NODE_COUNT; ++i )\
+    int __i;\
+    D->_count = 0;\
+    D->_store   = (rb_node_t**)calloc(DICT_NODE_COUNT,sizeof(rb_node_t*));\
+    D->_free                    =   Vector_New();\
+    Vector_Create(int,D->_free,DICT_NODE_COUNT);\
+    Vector_Push_back(int,D->_free,(ptrdiff_t)(D->_store));\
+    for ( __i = 0 ; __i < DICT_NODE_COUNT; ++__i )\
     {\
-        D->_store[i] = (rb_node_t*)malloc(sizeof(rb_node_t));\
-        Tree_Node_Init(KT,VT,D->_store[i],INVALID_KEY,INVALID_VALUE);\
-        D->_store[i]->used = 0;\
+    D->_store[__i]              = (rb_node_t*)calloc(1,sizeof(rb_node_t));\
+    Vector_Push_back(int,D->_free,(ptrdiff_t)(D->_store[__i]));\
+    D->_store[__i]->value       = calloc(1,VSZ);\
+    D->_store[__i]->key         = calloc(1,KSZ);\
+    D->_store[__i]->color       = RED;  \
+    D->_capacity                = DICT_NODE_COUNT;\
     }\
 }
+
+#define     Dict_Enlarge(D,KSZ,VSZ) \
+{\
+    int __i,__count = D->_capacity * 3;\
+    D->_store   = (rb_node_t**)realloc(D->_store,sizeof(rb_node_t*)*__count);\
+    for ( __i = D->_capacity ; __i < __count; ++__i )\
+    {\
+    D->_store[__i]              = (rb_node_t*)calloc(1,sizeof(rb_node_t));\
+    D->_store[__i]->value       = calloc(1,VSZ);\
+    D->_store[__i]->key         = calloc(1,KSZ);\
+    D->_store[__i]->parent      = NULL;    \
+    D->_store[__i]->left        = NULL;  \
+    D->_store[__i]->right       = NULL; \
+    D->_store[__i]->color       = RED;  \
+    D->_store[__i]->used        = 0;\
+    D->_capacity                = __count;\
+    }\
+}
+
 
 /*
  *
@@ -37,59 +70,102 @@ extern "C"{
 T : Type
 D : the dict to search in
 K : the key
-R : result, p2p
+R : result, p2p,返回值
+寻找空余节点，用于存储键值
 */
-#define     _Dict_Search( T, D , K, R ) \
+#define     _Dict_Search(D,K,R) \
 {   \
-    uint32_t  hashval = 0, i = 0,finded = 0;\
-    rb_node_t   *nd,*res = NULL;\
-    Dict_Hash(K,&hashval);\
-    nd = D->_store[hashval];\
-    if (*(T*)nd->key == K || !nd->used){ *R = nd;}\
+    int (*compare)(void *arg1,void *arg2);\
+    int KT = getType(K);\
+    uint32_t  __ds_hv = 0, ds_i = 0,__finded = 0;\
+    rb_node_t   *ds_nd,*ds_res = NULL;\
+    Dict_Hash(K,&__ds_hv);\
+    switch (KT) \
+    {\
+            case REAL:\
+            case BOOL:\
+            case INT:\
+            case STRING:\
+            {\
+                compare = Default_Compare;break;\
+            }\
+            default:\
+            {\
+                compare = ((BaseType*)K)->compare;\
+                break;\
+            }\
+    }\
+    ds_nd = D->_store[__ds_hv];\
+    if (!ds_nd->used||compare(ds_nd->key,K) == 0 )\
+    { *R = ds_nd;\
+    }\
     else{\
-       /*search in current tree node*/     \
-      _tree_search(T,nd,K,(rb_node_t**)NULL,&res); \
-      if ( res ) { *R = res;}  \
-      else{\
-        for ( i = hashval+1; i < DICT_NODE_COUNT; ++i )    \
+      _tree_search(ds_nd,K,compare,(rb_node_t**)NULL,&ds_res); \
+      if ( ds_res ) { *R = ds_res;}  \
+      else\
+      {\
+        for ( ds_i = __ds_hv+1; ds_i + REHS_STEP < D->_capacity; )    \
         {\
-            if (!D->_store[i]->used) { *R = D->_store[i];finded = 1;break; }\
+            if (!D->_store[ds_i]->used || compare(D->_store[ds_i]->key,K) == 0) \
+            { *R = D->_store[ds_i];\
+                __finded = 1;break; \
+            }\
+            ds_i += REHS_STEP;\
         }\
-        if (!finded){\
-          for ( i = 0 ; i < hashval; ++i){if (!D->_store[i]->used){ *R = D->_store[i];finded = 1;break;} } \
+        if (!__finded){\
+          for ( ds_i = 0 ; ds_i + REHS_STEP < __ds_hv;)\
+          {if (!D->_store[ds_i]->used || compare(D->_store[ds_i]->key,K) == 0)\
+                { *R = D->_store[ds_i];\
+                  __finded = 1;break;} \
+            ds_i += REHS_STEP;\
+          } \
         }\
-        if (!finded) *R = NULL;\
+        if (!__finded) \
+        {*R = NULL;\
+        }\
       }\
     }   \
 }
 
-#define     Dict_Insert(KT,VT,D,K,V)    \
+#define     Dict_Insert(D,K,V)    \
 {\
-    uint32_t    hashval; \
-    rb_node_t   *node; \
-    printf("Key=%d\n",K);\
-    Dict_Hash(K,&hashval); \
-    _Dict_Search(KT,D,K,&node);\
-   if ( node == NULL ) \
+    static int _I = 0; \
+    uint32_t    di_hashval; \
+    rb_node_t   *di_node,*_di_tmp; \
+    Dict_Hash(K,&di_hashval); \
+    _di_tmp = D->_store[di_hashval];\
+    _Dict_Search(D,K,&di_node);\
+   if ( di_node == NULL ) \
     { \
-        node = (rb_node_t*)malloc(sizeof(rb_node_t)); \
-        memset(node,0,sizeof(rb_node_t));\
-        Tree_Node_Init(KT,VT,node,K,V);\
-    } \
-    *(KT*)node->key = K; \
-    *(VT*)node->value = V; \
-    node->used = 1; \
-    Tree_Add_Node(KT,VT,node,&D->_store[hashval]);\
+        di_node = (rb_node_t*)calloc(1,sizeof(rb_node_t)); \
+        Tree_Node_Init(di_node,K,V);\
+    } else\
+        Node_Set(di_node,K,V);\
+    Tree_Add_Node(di_node,&D->_store[di_hashval]);\
+    di_node->used = 1; \
 }
 
-#define     Dict_Get(KT,VT,D,K,R) \
+#define     Dict_Get(D,K,R) \
 {\
-    uint32_t    hashval;\
-    rb_node_t   *dg_node  ;\
-    Dict_Hash(K,&hashval);\
-    _tree_search(KT,D->_store[hashval],K,(rb_node_t**)NULL,&dg_node);\
+    int _TP = getType(R);\
+    rb_node_t   *dg_node = NULL  ;\
+    _Dict_Search(D,K,&dg_node);\
     assert(dg_node != NULL);\
-    *R =    *(VT*)dg_node->value;\
+    switch(_TP)\
+    {\
+      case INT:\
+        {\
+            ((XD_INT*)R)->_value = ((XD_INT*)(dg_node->value))->_value;break;\
+        }\
+      case REAL:\
+        {\
+            ((XD_Real*)R)->_value = ((XD_Real*)(dg_node->value))->_value;break;\
+        }\
+      case STRING:\
+        {\
+            ((XD_String*)R)->_value = ((XD_String*)(dg_node->value))->_value;break;\
+        }\
+    }\
 }
 typedef struct dict_t    dict_t;
 typedef struct dict_t    _dict_t;
@@ -101,7 +177,9 @@ struct dict_t
     uint32_t            (*hash)(const void *key);
     void                (*set)(dict_t *dict,const key_type key,const value_type v );
     value_type          (*get)(dict_t *dict, key_type key);
-    rb_node_t           *_store[ DICT_NODE_COUNT ];
+    rb_node_t           **_store;
+    uint32_t             _capacity;
+    Vector              *_free;
 };
 
 uint32_t        _dict_hash_int(const int *k);
@@ -112,6 +190,9 @@ int             _keyCmp(key_type *k1,key_type *k2);
 void            dict_insert(dict_t *dict, const key_type key, const value_type v );
 value_type      dict_get(dict_t *dict, key_type key);
 void            dict_free(dict_t *dict);
+
+int             _NUM_CMP(void*K1,void*K2);
+int             _KEY_CMP(void* X1, void *X2, int len);
 
 
 #ifdef __cplusplus
