@@ -51,7 +51,6 @@ void  ex_dict(void)
 
     Dict_Init(dict,sizeof(XD_String),sizeof(XD_String));
     Dict_Insert(dict,(&sk1),(&sv1));
-    printf("===========================\n");
     Dict_Insert(dict,(&sk2),(&sv2));
 
     Dict_Get(dict,(&sk1),(&stest));

@@ -19,7 +19,6 @@ void  ex_list(void)
 
     int v;
 
-
     List_Push_Back(int,list,1);
     List_Push_Back(int,list,2);
     List_Push_Back(int,list,3);
