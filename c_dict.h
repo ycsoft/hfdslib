@@ -8,13 +8,11 @@ extern "C"{
 
 #include <stddef.h>
 
-#include "c_vector.h"
-#include "cdef.h"
+#define     XD_Dict             dict_t
+#define     Node                rb_node_t
 
-#define     XD_Dict     dict_t
 
 #define     DICT_NODE_COUNT     9973
-
 #define     REHS_STEP           3
 
 
@@ -24,46 +22,25 @@ extern "C"{
               *R = (__x + (__x >> 3)) % DICT_NODE_COUNT; \
             }
 
-#define     Dict_New()      (SP_Dict*)malloc(sizeof(SP_Dict))
+#define     Dict_New()      (dict_t*)malloc(sizeof(dict_t))
 
 #define     Dict_Init(D,KSZ,VSZ) \
 {\
     int __i;\
     D->_count = 0;\
-    D->_store   = (rb_node_t**)calloc(DICT_NODE_COUNT,sizeof(rb_node_t*));\
+    D->_store   = (Node**)calloc(DICT_NODE_COUNT,sizeof(Node*));\
     D->_free                    =   Vector_New();\
-    Vector_Create(int,D->_free,DICT_NODE_COUNT);\
-    Vector_Push_back(int,D->_free,(ptrdiff_t)(D->_store));\
+    Vector_Create(Node*,D->_free,DICT_NODE_COUNT);\
     for ( __i = 0 ; __i < DICT_NODE_COUNT; ++__i )\
     {\
-    D->_store[__i]              = (rb_node_t*)calloc(1,sizeof(rb_node_t));\
-    Vector_Push_back(int,D->_free,(ptrdiff_t)(D->_store[__i]));\
+    D->_store[__i]              = (Node*)calloc(1,sizeof(Node));\
+    Vector_Push_back(Node*,D->_free,D->_store[__i]);\
     D->_store[__i]->value       = calloc(1,VSZ);\
     D->_store[__i]->key         = calloc(1,KSZ);\
     D->_store[__i]->color       = RED;  \
     D->_capacity                = DICT_NODE_COUNT;\
     }\
 }
-
-#define     Dict_Enlarge(D,KSZ,VSZ) \
-{\
-    int __i,__count = D->_capacity * 3;\
-    D->_store   = (rb_node_t**)realloc(D->_store,sizeof(rb_node_t*)*__count);\
-    for ( __i = D->_capacity ; __i < __count; ++__i )\
-    {\
-    D->_store[__i]              = (rb_node_t*)calloc(1,sizeof(rb_node_t));\
-    D->_store[__i]->value       = calloc(1,VSZ);\
-    D->_store[__i]->key         = calloc(1,KSZ);\
-    D->_store[__i]->parent      = NULL;    \
-    D->_store[__i]->left        = NULL;  \
-    D->_store[__i]->right       = NULL; \
-    D->_store[__i]->color       = RED;  \
-    D->_store[__i]->used        = 0;\
-    D->_capacity                = __count;\
-    }\
-}
-
-
 /*
  *
  *
@@ -78,7 +55,7 @@ R : result, p2p,返回值
     int (*compare)(void *arg1,void *arg2);\
     int KT = getType(K);\
     uint32_t  __ds_hv = 0, ds_i = 0,__finded = 0;\
-    rb_node_t   *ds_nd,*ds_res = NULL;\
+    Node   *ds_nd,*ds_res = NULL;\
     Dict_Hash(K,&__ds_hv);\
     switch (KT) \
     {\
@@ -100,7 +77,7 @@ R : result, p2p,返回值
     { *R = ds_nd;\
     }\
     else{\
-      _tree_search(ds_nd,K,compare,(rb_node_t**)NULL,&ds_res); \
+      _tree_search(ds_nd,K,compare,(Node**)NULL,&ds_res); \
       if ( ds_res ) { *R = ds_res;}  \
       else\
       {\
@@ -131,24 +108,32 @@ R : result, p2p,返回值
 {\
     static int _I = 0; \
     uint32_t    di_hashval; \
-    rb_node_t   *di_node,*_di_tmp; \
+    Node   *di_node,*_di_tmp; \
     Dict_Hash(K,&di_hashval); \
     _di_tmp = D->_store[di_hashval];\
     _Dict_Search(D,K,&di_node);\
    if ( di_node == NULL ) \
     { \
-        di_node = (rb_node_t*)calloc(1,sizeof(rb_node_t)); \
+        di_node = (Node*)calloc(1,sizeof(Node)); \
+        Vector_Push_back(Node*,D->_free,di_node);\
         Tree_Node_Init(di_node,K,V);\
     } else\
         Node_Set(di_node,K,V);\
     Tree_Add_Node(di_node,&D->_store[di_hashval]);\
     di_node->used = 1; \
 }
-
+#define     Dict_Free(D) \
+    for ( int i = 0 ; i < D->_free->__inner_vec->_size; i++ )\
+    {\
+        Node *_nd = Vector_Get(Node*,D->_free,i);\
+        free(_nd->key);free(_nd->value);\
+        free(_nd);\
+    }\
+    Vector_Free(D->_free);free(D->_free);free(D->_store)
 #define     Dict_Get(D,K,R) \
 {\
     int _TP = getType(R);\
-    rb_node_t   *dg_node = NULL  ;\
+    Node   *dg_node = NULL  ;\
     _Dict_Search(D,K,&dg_node);\
     assert(dg_node != NULL);\
     switch(_TP)\
@@ -167,33 +152,17 @@ R : result, p2p,返回值
         }\
     }\
 }
+
 typedef struct dict_t    dict_t;
 typedef struct dict_t    _dict_t;
 
 struct dict_t
 {
     uint32_t             _count;
-    int32_t             (*keyCmp)(void *k1, void *k2);
-    uint32_t            (*hash)(const void *key);
-    void                (*set)(dict_t *dict,const key_type key,const value_type v );
-    value_type          (*get)(dict_t *dict, key_type key);
-    rb_node_t           **_store;
+    Node           **_store;
     uint32_t             _capacity;
     Vector              *_free;
 };
-
-uint32_t        _dict_hash_int(const int *k);
-dict_t          *dict_create();
-rb_node_t       *_dict_search(dict_t *dict, key_type key , uint32_t *hsh);
-uint32_t        _dict_hash_int(const int *k);
-int             _keyCmp(key_type *k1,key_type *k2);
-void            dict_insert(dict_t *dict, const key_type key, const value_type v );
-value_type      dict_get(dict_t *dict, key_type key);
-void            dict_free(dict_t *dict);
-
-int             _NUM_CMP(void*K1,void*K2);
-int             _KEY_CMP(void* X1, void *X2, int len);
-
 
 #ifdef __cplusplus
 }
