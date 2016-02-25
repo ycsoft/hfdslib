@@ -6,10 +6,10 @@
 
 #include "cdef.h"
 
-int  getType(void *data)
-{
-    return ((BaseType*)data)->type;
-}
+//int  getType(void *data)
+//{
+//    return ((BaseType*)data)->type;
+//}
 
 
 int     Default_Compare(void *a1, void *a2)

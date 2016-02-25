@@ -9,7 +9,7 @@ extern "C"
 typedef enum{ INT,REAL, STRING, BOOL, CUSTOM } EType;
 
 
-int  getType(void *data);
+//int  getType(void *data);
 
 typedef struct _Base
 {
@@ -51,6 +51,9 @@ void    Default_Copy( void *a1, void *a2);
 #define         Int(X)          {{INT,sizeof(int),Default_Compare,Default_Copy},X}
 #define         Real(X)         {{REAL,sizeof(double),Default_Compare,Default_Copy},X}
 #define         String(X)       {{STRING,sizeof(char*),Default_Compare,Default_Copy},X}
+
+
+#define     getType(data)       (((BaseType*)data)->type)
 
 #ifdef __cplusplus
 }
