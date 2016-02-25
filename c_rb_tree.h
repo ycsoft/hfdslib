@@ -1,9 +1,6 @@
 ﻿#ifndef C_RB_TREE_H
 #define C_RB_TREE_H
 
-
-#include "cdef.h"
-
 typedef void* key_type;
 typedef void* value_type;
 

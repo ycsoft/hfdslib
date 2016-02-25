@@ -70,7 +70,6 @@ size_t                  _Grow_to(pc_vector vec,size_t _Count);
 
 
 
-
 /////////////////////////////////////////////////////
 
 #ifdef __cplusplus
