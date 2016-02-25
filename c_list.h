@@ -1,4 +1,4 @@
-#ifndef C_LIST_H
+﻿#ifndef C_LIST_H
 #define C_LIST_H
 
 #define     LIST_INIT_SIZE      1000
@@ -15,6 +15,7 @@ extern "C"
 #endif
 
 #define     HF_List     c_list
+#define     YC_List     c_list
 
 #define     List_Create( Type ) \
             list_init(sizeof(Type))
