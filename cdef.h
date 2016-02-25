@@ -8,9 +8,6 @@ extern "C"
 
 typedef enum{ INT,REAL, STRING, BOOL, CUSTOM } EType;
 
-
-//int  getType(void *data);
-
 typedef struct _Base
 {
     int         type;
