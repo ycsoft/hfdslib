@@ -5,6 +5,9 @@
 extern "C"{
 #endif
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "cdef.h"
 #include "c_vector.h"
 #include "c_list.h"
