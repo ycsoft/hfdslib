@@ -11,13 +11,9 @@
 
 #include <boost/unordered_map.hpp>
 
-#include "c_hash.h"
+#include "ycdslib.h"
+
 #include "ctest.h"
-#include "c_list.h"
-#include "c_rb_tree.h"
-#include "c_dict.h"
-#include "c_vector.h"
-#include "cstl_vector.h"
 #include "test/listclass.hpp"
 #include "test/vectorclass.hpp"
 
@@ -81,36 +77,7 @@ void base_rb_hash(void)
 
 void test_hash(void)
 {
-    int i = 0 , j = 0;
-    clock_t start, end;
-    c_map   * map = map_create();
-    char   *key[times];
 
-    for ( i = 0 ; i < times; i++)
-    {
-        key[i] = (char*)malloc(sizeof(char)*32);
-        sprintf(key[i],"%d",i);
-    }
-
-    start = clock();
-    for( j = 0 ;j < runtimes; ++j)
-    {
-
-        for ( i = 0 ; i < times; ++i)
-        {
-            map->set(map,key[i],i);
-        }
-
-    }
-    map->free(map);
-    end = clock();
-    fprintf(stdout,"HF_HashMap hash Time Ellapsed:%dms\n",end-start);
-
-
-    for ( i = 0 ; i < times; i++)
-    {
-        free(key[i]);
-    }
 }
 
 

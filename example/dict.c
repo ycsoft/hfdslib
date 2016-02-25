@@ -4,11 +4,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "c_hash.h"
-#include "c_list.h"
-#include "c_rb_tree.h"
-#include "c_dict.h"
-#include "cdef.h"
+#include "ycdslib.h"
 
 #ifdef __cplusplus
 extern "C"
