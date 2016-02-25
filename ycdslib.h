@@ -7,6 +7,7 @@ extern "C"{
 
 #include <stddef.h>
 #include <stdint.h>
+#include <assert.h>
 
 #include "cdef.h"
 #include "c_vector.h"
