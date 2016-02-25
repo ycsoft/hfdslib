@@ -26,7 +26,6 @@ int     Default_Compare(void *a1, void *a2)
     case STRING:{
         char *s1 = ((XD_String*)a1)->_value,
              *s2 = ((XD_String*)a2)->_value;
-        printf("Compare: %s\t%s\n",s1,s2);
         return strcmp(s1,s2);
         }
     }
